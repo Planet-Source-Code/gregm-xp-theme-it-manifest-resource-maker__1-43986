@@ -1,0 +1,583 @@
+//+==========================================================================;
+/////////////////////////////////////////////////////////////////
+//  THE CODE AND USE OF THIS CODE IS PROVIDED "AS IS" WITHOUT LIABILITY
+//  TO THE AUTHOR AT ANY TIME. YOU MAY EDIT THE CODE AND DISTRIBUTE IT
+//  ANY WAY YOU SEE FIT, HOWEVER, YOU MUST USE YOUR OWN CLSID FOR THE
+//  THE NEW TYPELIB BEFORE COMPILING.
+//
+/////////////////////////////////////////////////////////////////
+//  Copyright © 2003. Greg Miller. All Rights Reserved.
+/////////////////////////////////////////////////////////////////
+//
+//  Stream of binary or text data.
+//
+/////////////////////////////////////////////////////////////////
+//--------------------------------------------------------------------------;
+
+[
+  uuid(CE0A2D49-214A-4874-AF38-08CB38DDFCBB),
+  version(1.0),
+  helpstring("Stream Data Object Library 1.0")
+]
+library StreamData
+{
+
+    importlib("stdole2.tlb");
+
+    typedef unsigned char BYTE;
+	typedef long LONG;
+    typedef short INTEGER;
+	typedef short BOOLEAN;
+	typedef LPSTR LPOLESTR;
+
+	typedef struct GUID {
+        LONG data1;
+        INTEGER data2;
+        INTEGER data3;
+        BYTE  data4[8];
+    } GUID;
+	typedef GUID *REFIID;
+
+    // Forward declare all types defined in this typelib
+	interface ITypeInfo;
+	interface ITypeInfo2;
+	interface ITypeComp;
+	interface ITypeLib;
+	interface ITypeLib2;
+	interface IDispatch;
+    interface _Stream;
+	coclass Stream;
+
+    [
+      odl,
+	  hidden,
+      uuid(00020400-0000-0000-C000-000000000046),
+    ]
+    interface IDispatch : stdole.IUnknown {
+
+		typedef [hidden, helpstring("DISP_E_EXCEPTION Error info")] 
+		struct EXCEPINFO {
+			[helpstring("Error number")]
+			INTEGER wCode;
+			INTEGER wReserved;
+			[helpstring("Source")]
+			BSTR Source;
+			[helpstring("Description")]
+			BSTR Description;
+			[helpstring("Help file")]
+			BSTR HelpFile;
+			[helpstring("Help context")]
+			BSTR dwHelpContext;
+			LONG pvReserved;
+			[helpstring("HRESULT (__stdcall *pfnDeferredFillIn)(struct EXCEPINFO *);")]
+			LONG pfnDeferredFillIn;
+			LONG scode;
+		} EXCEPINFO;
+		
+		typedef [hidden] struct DISPPARAMS {
+			[helpstring("Parameters")]
+			LONG rgPointerToVariantArray;
+			[helpstring("Named parameters")]
+			LONG rgPointerToLONGNamedArgs;
+			[helpstring("Parameter count")]
+			LONG cArgs;
+			[helpstring("Named parameter count")]
+			LONG cNamedArgs;
+		} DISPPARAMS;
+
+		typedef [hidden] enum INVOKEKIND {
+			INVOKE_FUNC = 1,
+			INVOKE_PROPERTYGET = 2,
+			INVOKE_PROPERTYPUT = 4,
+			INVOKE_PROPERTYPUTREF = 8
+		} INVOKEKIND;
+
+		typedef [hidden] enum TYPEFLAGS {
+			TYPEFLAG_FAPPOBJECT = 0x01,
+			TYPEFLAG_FCANCREATE = 0x02,
+			TYPEFLAG_FLICENSED = 0x04,
+			TYPEFLAG_FPREDECLID = 0x08,
+			TYPEFLAG_FHIDDEN = 0x10,
+			TYPEFLAG_FCONTROL = 0x20,
+			TYPEFLAG_FDUAL = 0x40,
+			TYPEFLAG_FNONEXTENSIBLE = 0x80,
+			TYPEFLAG_FOLEAUTOMATION = 0x100,
+			TYPEFLAG_FRESTRICTED = 0x200,
+			TYPEFLAG_FAGGREGATABLE = 0x400,
+			TYPEFLAG_FREPLACEABLE = 0x800,
+			TYPEFLAG_FDISPATCHABLE = 0x1000,
+			TYPEFLAG_FREVERSEBIND = 0x2000
+		} TYPEFLAGS;
+
+		typedef [hidden] enum TYPEKIND {
+			TKIND_ENUM = 0,
+			TKIND_RECORD,
+			TKIND_MODULE,
+			TKIND_INTERFACE,
+			TKIND_DISPATCH,
+			TKIND_COCLASS,
+			TKIND_ALIAS,
+			TKIND_UNION,
+			TKIND_MAX
+		} TYPEKIND;
+
+		typedef [hidden] struct CUSTDATA {
+			[helpstring("number of custom data items in rgCustData")]
+			LONG cCustData;
+			LONG prgCustData;
+		} CUSTDATA;
+
+		[hidden]
+        HRESULT GetTypeInfoCount(
+            [out, retval] LONG* pctinfo);
+		
+		[hidden]
+        HRESULT GetTypeInfo(
+            [in, defaultvalue(0)] LONG itinfo,
+            [in, defaultvalue(0)] LONG lcid,
+            [out, retval] ITypeInfo **pptinfo);
+
+		[hidden]
+        LONG GetIDsOfNames(
+            [in] REFIID* riid,
+            [in] LPOLESTR *rgszNames,
+            [in] LONG cNames,
+            [in] LONG lcid,
+            [out] LONG *rgdispid);
+		
+		[hidden]
+        LONG Invoke(
+            [in] LONG dispidMember,
+            [in] REFIID* riid,
+            [in] LONG lcid,
+            [in] INTEGER wFlags,
+            [in] DISPPARAMS *pdispparams,
+            [in] LONG pvarResult,
+            [out] EXCEPINFO *pexcepinfo,
+            [out] LONG *puArgErr);
+    }
+
+    [
+        odl,
+		hidden,
+        uuid(00020401-0000-0000-C000-000000000146),
+    ]
+    interface ITypeInfo : stdole.IUnknown {
+		[hidden]
+        HRESULT GetTypeAttr(
+                [out, retval] LONG * ppTypeAttr);
+		[hidden]
+        HRESULT GetTypeComp(
+                [out, retval] ITypeComp ** ppTComp);
+		[hidden]
+        HRESULT GetFuncDesc(
+                [in] LONG index,
+                [out, retval] LONG * ppFuncDesc);
+		[hidden]
+        HRESULT GetVarDesc(
+                [in] LONG index,
+                [out, retval] LONG * ppVarDesc);
+		[hidden]
+        HRESULT GetNames(
+                [in] LONG memid,
+                [in, out] BSTR * rgBSTRNames,
+                [in] LONG cMaxNames,
+                [out, retval] LONG * pcNames);
+		[hidden]
+        HRESULT GetRefTypeOfImplType(
+                [in] LONG index,
+                [out, retval] LONG *pRefType);
+		[hidden]
+        HRESULT GetImplTypeFlags(
+                [in] LONG index,
+                [out, retval] LONG *pImplTypeFlags);
+		[hidden]
+        HRESULT GetIDsOfNames(
+                [in] LPOLESTR *rgszNames,
+                [in] LONG cNames,
+                [in, out] LONG *pMemId);
+		[hidden]
+        HRESULT Invoke(
+                [in] IDispatch *pvInstance,
+                [in] LONG memid,
+                [in] INTEGER wFlags,
+                [in, out] DISPPARAMS * pDispParams,
+                [in] LONG pVarResult,
+                [in, out] EXCEPINFO * pExcepInfo,
+                [in, out] LONG * puArgErr);
+		[hidden]
+        HRESULT GetDocumentation(
+                [in] LONG memid,
+                [in, out] BSTR * pVBSTRINGName,
+                [in, out] BSTR * pVBSTRINGDocString,
+                [in, out] LONG * pdwHelpContext,
+                [in, out] BSTR * pVBSTRINGHelpFile);
+		[hidden]
+        HRESULT GetDllEntry(
+                [in] LONG memid,
+                [in] INVOKEKIND invKind,
+                [in, out] BSTR * pVBSTRINGDllName,
+                [in, out] BSTR * pVBSTRINGName,
+                [in, out] INTEGER * pwOrdinal);
+		[hidden]
+        HRESULT GetRefTypeInfo(
+                [in] LONG hRefType,
+                [out, retval] ITypeInfo **ppTInfo);
+		[hidden]
+        HRESULT AddressOfMember(
+                [in] LONG memid,
+                [in] INVOKEKIND invKind,
+                [out, retval] LONG *ppv);
+		[hidden]
+        HRESULT CreateInstance(
+                [in] void *pUnkOuter,
+                [in] REFIID *riid,
+                [out, retval] IDispatch **ppvObj);
+		[hidden]
+        HRESULT GetMops(
+                [in] LONG memid,
+                [in, out] BSTR * pVBSTRINGMops);
+		[hidden]
+        HRESULT GetContainingTypeLib(
+                [out] ITypeLib **ppTLib,
+                [out, retval] LONG * pIndex);
+		[hidden]
+        void ReleaseTypeAttr(
+                [in] LONG pTypeAttr);
+		[hidden]
+        void ReleaseFuncDesc(
+                [in] LONG pFuncDesc);
+		[hidden]
+        void ReleaseVarDesc(
+                [in] LONG pVarDesc);
+
+    }
+
+    [
+        uuid(00020412-0000-0000-C000-000000000046),
+        helpstring("ITypeInfo2 interface"),
+		hidden,
+        odl
+    ]
+    interface ITypeInfo2 : ITypeInfo {
+		[hidden]
+        HRESULT GetTypeKind(
+                [out, retval] TYPEKIND * pTypeKind);
+		[hidden]
+        HRESULT GetTypeFlags(
+                [out, retval] TYPEFLAGS *pTypeFlags);
+		[hidden]
+        HRESULT GetFuncIndexOfMemId(
+                [in] LONG memid,
+                [in] INVOKEKIND invKind,
+                [out, retval] LONG *pFuncIndex);
+		[hidden]
+        HRESULT GetVarIndexOfMemId(
+                [in] LONG memid,
+                [out, retval] LONG * pVarIndex);
+		[hidden]
+        HRESULT GetCustData(
+                [in] REFIID *riid,
+                [out, retval] VARIANT * pVarVal);
+		[hidden]
+        HRESULT GetFuncCustData(
+                [in] LONG index,
+                [in] REFIID *riid,
+                [out, retval] VARIANT * pVarVal);
+		[hidden]
+        HRESULT GetParamCustData(
+                [in] LONG indexFunc,
+                [in] LONG indexParam,
+                [in] REFIID *riid,
+                [out, retval] VARIANT * pVarVal);
+		[hidden]
+        HRESULT GetVarCustData(
+                [in] LONG index,
+                [in] REFIID *riid,
+                [out, retval] VARIANT * pVarVal);
+		[hidden]
+       HRESULT GetImplTypeCustData(
+                [in] LONG index,
+                [in] REFIID *riid,
+                [out, retval] VARIANT * pVarVal);
+		[hidden]
+       HRESULT GetDocumentation2(
+                [in] LONG memid,
+                [in] LONG lcid,
+                [out] BSTR *pVBSTRINGHelpString,
+                [out] LONG *pdwHelpStringContext,
+                [out] BSTR *pVBSTRINGHelpStringDll);
+		[hidden]
+       HRESULT GetAllCustData(
+                [in, out] CUSTDATA * pCustData);
+		[hidden]
+       HRESULT GetAllFuncCustData(
+                [in] LONG index,
+                [in, out] CUSTDATA * pCustData);
+		[hidden]
+       HRESULT GetAllParamCustData(
+                [in] LONG indexFunc,
+                [in] LONG indexParam,
+                [in, out] CUSTDATA * pCustData);
+		[hidden]
+       HRESULT GetAllVarCustData(
+                [in] LONG index,
+                [in, out] CUSTDATA * pCustData);
+		[hidden]
+       HRESULT GetAllImplTypeCustData(
+                [in] LONG index,
+                [in, out] CUSTDATA * pCustData);
+    }
+
+    [
+        odl,
+		hidden,
+        uuid(00020403-0000-0000-C000-000000000046)
+    ]
+    interface ITypeComp : stdole.IUnknown {
+
+        typedef [hidden] enum DESCKIND {
+            DESCKIND_NONE = 0,
+            DESCKIND_FUNCDESC,
+            DESCKIND_VARDESC,
+            DESCKIND_TYPECOMP,
+            DESCKIND_IMPLICITAPPOBJ,
+            DESCKIND_MAX
+        } DESCKIND;
+
+		[hidden]
+        HRESULT Bind(
+            [in] LPOLESTR szName,
+            [in] LONG lHashVal,
+            [in] INTEGER wFlags,
+            [out] ITypeInfo ** ppTInfo,
+            [out] DESCKIND * pDescKind,
+            [out] LONG * pBindPtr);
+		[hidden]
+        HRESULT BindType(
+            [in] LPOLESTR szName,
+            [in] LONG lHashVal,
+            [out] ITypeInfo ** ppTInfo,
+            [out] ITypeComp ** ppTComp);
+
+    }
+
+    [
+        uuid(00020402-0000-0000-C000-000000000046),
+        helpstring("ITypeLib interface"),
+		hidden,
+        odl
+    ]
+    interface ITypeLib : stdole.IUnknown {
+		[hidden]
+        LONG GetTypeInfoCount(
+                void);
+		[hidden]
+        HRESULT GetTypeInfo(
+            [in]  LONG index,
+            [out, retval] ITypeInfo ** ppTInfo);
+		[hidden]
+        HRESULT GetTypeInfoType(
+            [in]  LONG index,
+            [out, retval] TYPEKIND * pTKind);
+		[hidden]
+        HRESULT GetTypeInfoOfIID(
+            [in] REFIID *riid,
+            [out, retval] ITypeInfo ** ppTinfo);
+		[hidden]
+        HRESULT GetLibAttr(
+            [out, retval] LONG *ppTLibAttr);
+		[hidden]
+        HRESULT GetTypeComp(
+            [out, retval] ITypeComp ** ppTComp);
+		[hidden]
+        HRESULT GetDocumentation(
+            [in] LONG index,
+            [out] BSTR * pBstrName,
+            [out] BSTR * pBstrDocString,
+            [out] LONG * pdwHelpContext,
+            [out] BSTR * pBstrHelpFile);
+		[hidden]
+        HRESULT IsName(
+            [in, out] LPOLESTR *szNameBuf,
+            [in] LONG lHashVal,
+            [out, retval] BOOLEAN * pfName);
+		[hidden]
+       HRESULT FindName(
+            [in, out] LPOLESTR *szNameBuf,
+            [in] LONG lHashVal,
+            [in, out] ITypeInfo **ppTInfo,
+            [in, out] LONG *rgMemId,
+            [in, out] INTEGER *pcFound);
+		[hidden]
+       void ReleaseTLibAttr(
+            [in]  LONG pTLibAttr);
+
+    }
+
+    [
+        uuid(00020411-0000-0000-C000-000000000046),
+		hidden,
+        odl
+    ]
+    interface ITypeLib2 : ITypeLib {
+		[hidden]
+        HRESULT GetCustData(
+            [in] REFIID *riid,
+            [out, retval] VARIANT * pVarVal);
+		[hidden]
+        HRESULT GetLibStatistics(
+            [out] LONG * pcUniqueNames,
+            [out] LONG * pcchUniqueNames);
+		[hidden]
+        HRESULT GetDocumentation2(
+            [in]  INTEGER index,
+            [in]  LONG lcid,
+            [out] BSTR *pbstrHelpString,
+            [out] LONG *pdwHelpStringContext,
+            [out] BSTR *pbstrHelpStringDll);
+		[hidden]
+        HRESULT GetAllCustData(
+            [out] CUSTDATA * pCustData);
+    }
+
+    [
+      odl,
+      uuid(00000565-0000-0010-8000-00AA006D2EA4),
+      hidden,
+      dual,
+      oleautomation
+    ]
+    interface _Stream : IDispatch {
+
+		typedef [uuid(00000576-0000-0010-8000-00AA006D2EA4)]
+		enum {
+			adTypeBinary = 1,
+			adTypeText = 2
+		} StreamTypeEnum;
+
+		typedef [uuid(00000577-0000-0010-8000-00AA006D2EA4)]
+		enum {
+			adLF = 10,
+			adCR = 13,
+			adCRLF = 0xffffffff
+		} LineSeparatorEnum;
+
+		typedef [uuid(00000532-0000-0010-8000-00AA006D2EA4)]
+		enum {
+			adStateClosed = 0,
+			adStateOpen = 1,
+			adStateConnecting = 2,
+			adStateExecuting = 4,
+			adStateFetching = 8
+		} ObjectStateEnum;
+
+		typedef [uuid(00000521-0000-0010-8000-00AA006D2EA4)]
+		enum {
+			adModeUnknown = 0,
+			adModeRead = 1,
+			adModeWrite = 2,
+			adModeReadWrite = 3,
+			adModeShareDenyRead = 4,
+			adModeShareDenyWrite = 8,
+			adModeShareExclusive = 12,
+			adModeShareDenyNone = 16,
+			adModeRecursive = 0x00400000
+		} ConnectModeEnum;
+
+		typedef [uuid(0000057A-0000-0010-8000-00AA006D2EA4)]
+		enum {
+			adOpenStreamUnspecified = 0xffffffff,
+			adOpenStreamAsync = 1,
+			adOpenStreamFromRecord = 4
+		} StreamOpenOptionsEnum;
+
+		typedef [uuid(0000057C-0000-0010-8000-00AA006D2EA4)]
+		enum {
+			adSaveCreateNotExist = 1,
+			adSaveCreateOverWrite = 2
+		} SaveOptionsEnum;
+
+		typedef [uuid(0000057B-0000-0010-8000-00AA006D2EA4)]
+		enum {
+			WriteChar = 0,
+			WriteLine = 1
+		} StreamWriteEnum;
+
+        [id(0x00000001), propget]
+        HRESULT Size([out, retval] LONG* pSize);
+        [id(0x00000002), propget]
+        HRESULT EOS([out, retval] BOOLEAN* pEOS);
+        [id(0x00000003), propget]
+        HRESULT Position([out, retval] LONG* pPos);
+        [id(0x00000003), propput]
+        HRESULT Position([in] LONG pPos);
+        [id(0x00000004), propget]
+        HRESULT Type([out, retval] StreamTypeEnum* ptype);
+        [id(0x00000004), propput]
+        HRESULT Type([in] StreamTypeEnum ptype);
+        [id(0x00000005), propget]
+        HRESULT LineSeparator([out, retval] LineSeparatorEnum* pLS);
+        [id(0x00000005), propput]
+        HRESULT LineSeparator([in] LineSeparatorEnum pLS);
+        [id(0x00000006), propget]
+        HRESULT State([out, retval] ObjectStateEnum* pState);
+        [id(0x00000007), propget]
+        HRESULT Mode([out, retval] ConnectModeEnum* pMode);
+        [id(0x00000007), propput]
+        HRESULT Mode([in] ConnectModeEnum pMode);
+        [id(0x00000008), propget]
+        HRESULT Charset([out, retval] BSTR* pbstrCharset);
+        [id(0x00000008), propput]
+        HRESULT Charset([in] BSTR pbstrCharset);
+        [id(0x00000009)]
+        HRESULT Read([in, defaultvalue(-1)] LONG Bytes,
+					 [out, retval] VARIANT* pval);
+        [id(0x0000000a)]
+        HRESULT Open(
+                        [in, optional] VARIANT Source, 
+                        [in, defaultvalue(0)] ConnectModeEnum Mode, 
+                        [in, defaultvalue(-1)] StreamOpenOptionsEnum Options, 
+                        [in, defaultvalue("")] BSTR UserName, 
+                        [in, defaultvalue("")] BSTR Password);
+        [id(0x0000000b)]
+        HRESULT Close();
+        [id(0x0000000c)]
+        HRESULT SkipLine();
+        [id(0x0000000d)]
+        HRESULT Write([in] VARIANT Buffer);
+        [id(0x0000000e)]
+        HRESULT SetEOS();
+        [id(0x0000000f)]
+        HRESULT CopyTo(
+                        [in] _Stream* DestStream, 
+                        [in, defaultvalue(-1)] LONG CharNumber);
+        [id(0x00000010)]
+        HRESULT Flush();
+        [id(0x00000011)]
+        HRESULT SaveToFile(
+                        [in] BSTR FileName, 
+                        [in, defaultvalue(1)] SaveOptionsEnum Options);
+        [id(0x00000012)]
+        HRESULT LoadFromFile([in] BSTR FileName);
+        [id(0x00000013)]
+        HRESULT ReadText(
+                        [in, defaultvalue(-1)] LONG NumChars, 
+                        [out, retval] BSTR* pbstr);
+        [id(0x00000014)]
+        HRESULT WriteText(
+                        [in] BSTR Data, 
+                        [in, defaultvalue(0)] StreamWriteEnum Options);
+        [id(0x00000015)]
+        HRESULT Cancel();
+    };
+
+    [
+      uuid(00000566-0000-0010-8000-00AA006D2EA4),
+    ]
+    coclass Stream {
+        [default] interface _Stream;
+    };
+
+
+};
